@@ -37,18 +37,51 @@
       <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:flex-end">
         <div class="campo" style="flex:1;min-width:140px"><label>Persona A</label><select id="excl-a" style="border:2px solid oklch(85% 0.04 145);border-radius:8px;padding:0.65rem 0.9rem;width:100%;font-family:Inter,sans-serif;font-size:1rem;background:var(--crema)"></select></div>
         <div class="campo" style="flex:1;min-width:140px"><label>Persona B</label><select id="excl-b" style="border:2px solid oklch(85% 0.04 145);border-radius:8px;padding:0.65rem 0.9rem;width:100%;font-family:Inter,sans-serif;font-size:1rem;background:var(--crema)"></select></div>
-        <button class="btn btn-secundario btn-sm" id="btn-add-ex">+ Excluir</button>
+        <button class="btn btn-secundario btn-sm" id="btn-add-ex" style="margin-bottom:1rem;align-self:flex-end">+ Excluir</button>
       </div>
       <ul class="lista-exclusiones" id="lista-exclusiones"></ul>
     </div>
     <div class="tarjeta">
       <h2>💬 Mensaje personalizado <span style="font-size:0.8rem;color:var(--gris);font-weight:400">(opcional)</span></h2>
-      <div class="campo">
-        <textarea id="mensaje" rows="3" maxlength="500" placeholder="Ej: Presupuesto 30€. Entrega el 24 de diciembre."></textarea>
-        <div class="contador-caracteres" id="contador">0 / 500</div>
+      <!-- Vista edición -->
+      <div id="msg-edicion">
+        <div class="campo">
+          <textarea id="mensaje" rows="3" maxlength="500" placeholder="Ej: Presupuesto 30€. Entrega el 24 de diciembre."></textarea>
+          <div class="contador-caracteres" id="contador">0 / 500</div>
+        </div>
+        <button class="btn btn-primario btn-sm" id="btn-guardar-msg">💾 Guardar mensaje</button>
       </div>
-      <button class="btn btn-secundario btn-sm" id="btn-guardar-msg">💾 Guardar mensaje</button>
+      <!-- Vista previa (se muestra tras guardar) -->
+      <div id="msg-preview" style="display:none">
+        <div style="background:oklch(95% 0.03 85);border-left:4px solid var(--dorado);border-radius:0 8px 8px 0;padding:0.75rem 1rem;margin-bottom:0.75rem">
+          <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--gris);margin-bottom:0.3rem">Mensaje guardado — así lo verán los participantes:</div>
+          <div id="msg-preview-texto" style="font-size:0.95rem;color:oklch(35% 0.05 85)"></div>
+        </div>
+        <button class="btn btn-secundario btn-sm" id="btn-editar-msg">✏️ Editar mensaje</button>
+      </div>
     </div>
+    <div class="tarjeta">
+      <h2>🎲 Simular sorteo</h2>
+      <p style="font-size:0.85rem;color:var(--gris);margin-bottom:1rem">Prueba el sorteo para verificar que las exclusiones funcionan. <strong>No guarda nada ni envía emails.</strong></p>
+      <button class="btn btn-secundario" id="btn-simular" style="width:100%">🎲 Simular (sin guardar)</button>
+    </div>
+
+    <!-- Modal simulación -->
+    <div id="modal-simulacion" style="display:none;position:fixed;inset:0;background:oklch(20% 0.05 145 / 0.6);z-index:100;padding:1rem;overflow-y:auto">
+      <div style="background:white;border-radius:16px;max-width:480px;margin:2rem auto;padding:1.5rem;box-shadow:0 8px 32px oklch(20% 0.05 145 / 0.3)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+          <h2 style="font-family:'Playfair Display',serif;color:var(--verde);font-size:1.2rem">🎲 Resultado de la simulación</h2>
+          <button onclick="cerrarSimulacion()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--gris)">✕</button>
+        </div>
+        <p style="font-size:0.8rem;color:var(--gris);margin-bottom:1rem;background:oklch(95% 0.03 85);padding:0.5rem 0.75rem;border-radius:8px">⚠️ Esto es solo una simulación — cada vez que pulses puede salir un resultado distinto. Nada se guarda.</p>
+        <ul id="lista-simulacion" style="list-style:none;padding:0"></ul>
+        <div style="display:flex;gap:0.5rem;margin-top:1.25rem">
+          <button class="btn btn-secundario btn-sm" onclick="simularSorteo()" style="flex:1">🔄 Volver a simular</button>
+          <button class="btn btn-primario btn-sm" onclick="cerrarSimulacion()" style="flex:1">✓ Cerrar</button>
+        </div>
+      </div>
+    </div>
+
     <div class="tarjeta">
       <h2>🚀 Lanzar sorteo</h2>
       <div id="alerta-lanzar" class="alerta"></div>
@@ -83,11 +116,14 @@
       if (!ok) { document.body.innerHTML = '<div class="contenedor"><div class="tarjeta"><h2>Acceso no autorizado</h2></div></div>'; return; }
       document.getElementById('titulo-sorteo').textContent = data.nombre;
       const badge = document.getElementById('estado-badge');
-      badge.textContent = data.estado === 'lanzado' ? '&#x2705; Lanzado' : '&#x23F3; Pendiente';
+      badge.textContent = data.estado === 'lanzado' ? '✅ Lanzado' : '⏳ Pendiente';
       badge.className = 'estado-badge estado-' + data.estado;
       participantes = data.participantes; exclusiones = data.exclusiones;
-      if (data.mensaje) document.getElementById('mensaje').value = data.mensaje;
-      document.getElementById('contador').textContent = (data.mensaje || '').length + ' / 500';
+      if (data.mensaje) {
+        document.getElementById('mensaje').value = data.mensaje;
+        document.getElementById('contador').textContent = data.mensaje.length + ' / 500';
+      }
+      mostrarPreviewMensaje(data.mensaje);
       renderP(); renderEx();
       if (data.estado === 'lanzado') {
         document.getElementById('btn-lanzar').disabled = true;
@@ -150,9 +186,29 @@
       const c = document.getElementById('contador'), len = e.target.value.length;
       c.textContent = len + ' / 500'; c.className = 'contador-caracteres' + (len > 450 ? ' limite-cercano' : '');
     });
+    function mostrarPreviewMensaje(texto) {
+      if (texto && texto.trim()) {
+        document.getElementById('msg-preview-texto').textContent = texto.trim();
+        document.getElementById('msg-edicion').style.display = 'none';
+        document.getElementById('msg-preview').style.display = 'block';
+      } else {
+        document.getElementById('msg-edicion').style.display = 'block';
+        document.getElementById('msg-preview').style.display = 'none';
+      }
+    }
     document.getElementById('btn-guardar-msg').onclick = async () => {
-      const { ok, data } = await api('PATCH', '/admin/'+token+'/mensaje', { mensaje: document.getElementById('mensaje').value });
-      alerta('alerta-global', ok ? 'Mensaje guardado.' : data.error, ok ? 'exito' : 'error');
+      const msgTexto = document.getElementById('mensaje').value;
+      const { ok, data } = await api('PATCH', '/admin/'+token+'/mensaje', { mensaje: msgTexto });
+      if (ok) {
+        mostrarPreviewMensaje(msgTexto);
+      } else {
+        alerta('alerta-global', data.error, 'error');
+      }
+    };
+    document.getElementById('btn-editar-msg').onclick = () => {
+      document.getElementById('msg-edicion').style.display = 'block';
+      document.getElementById('msg-preview').style.display = 'none';
+      document.getElementById('mensaje').focus();
     };
     async function reenviar(pid, btn) {
       btn.disabled = true; btn.textContent = '...';
@@ -160,6 +216,33 @@
       alerta('alerta-global', ok ? 'Email reenviado.' : data.error, ok ? 'exito' : 'error');
       btn.disabled = false; btn.textContent = 'Email';
     }
+    async function simularSorteo() {
+      const { ok, data } = await api('POST', '/admin/'+token+'/simular');
+      const modal = document.getElementById('modal-simulacion');
+      const lista = document.getElementById('lista-simulacion');
+      if (!ok) {
+        lista.innerHTML = '<li style="color:var(--rojo);padding:0.5rem 0">' + data.error + '</li>';
+      } else {
+        lista.innerHTML = data.resultado.map(r =>
+          '<li style="display:flex;justify-content:space-between;align-items:center;padding:0.6rem 0;border-bottom:1px solid oklch(92% 0.02 145)">'
+          + '<span style="font-weight:600">' + r.regalador + '</span>'
+          + '<span style="color:var(--gris);font-size:0.85rem;margin:0 0.5rem">regala a</span>'
+          + '<span style="color:var(--rojo);font-weight:600">' + r.receptor + '</span>'
+          + '</li>'
+        ).join('');
+      }
+      modal.style.display = 'block';
+      document.body.style.overflow = 'hidden';
+    }
+    function cerrarSimulacion() {
+      document.getElementById('modal-simulacion').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+    document.getElementById('modal-simulacion').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) cerrarSimulacion();
+    });
+    document.getElementById('btn-simular').onclick = simularSorteo;
+
     document.getElementById('btn-lanzar').onclick = async () => {
       if (!confirm('Lanzar el sorteo? Esta accion no se puede deshacer.')) return;
       const btn = document.getElementById('btn-lanzar');

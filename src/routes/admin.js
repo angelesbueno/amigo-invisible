@@ -140,4 +140,27 @@ router.post('/admin/:token_admin/reenviar/:participante_id', middlewareAdmin, as
   return res.json({ ok: true, email: p.email });
 });
 
+// POST /api/admin/:token_admin/simular — prueba el sorteo sin persistir ni enviar emails
+router.post('/admin/:token_admin/simular', middlewareAdmin, (req, res) => {
+  const { sorteo } = req;
+  if (sorteo.estado === 'lanzado') return res.status(400).json({ error: 'El sorteo ya fue lanzado.' });
+  const db = obtenerDb();
+  const participantes = db.prepare('SELECT * FROM participantes WHERE sorteo_id = ?').all(sorteo.id);
+  if (participantes.length < 3) return res.status(400).json({ error: `Se necesitan al menos 3 participantes. Actualmente hay ${participantes.length}.` });
+  const exclusiones = db.prepare('SELECT * FROM exclusiones WHERE sorteo_id = ?').all(sorteo.id);
+  let asignaciones;
+  try { asignaciones = asignar(participantes, exclusiones); }
+  catch (err) {
+    if (err.code === 'SORTEO_IMPOSIBLE') return res.status(400).json({ error: err.message });
+    throw err;
+  }
+  // Devolver resultado legible sin persistir nada
+  const resultado = asignaciones.map(({ regaladorId, receptorId }) => {
+    const regalador = participantes.find(p => p.id === regaladorId);
+    const receptor = participantes.find(p => p.id === receptorId);
+    return { regalador: regalador.nombre, receptor: receptor.nombre };
+  });
+  return res.json({ ok: true, resultado });
+});
+
 module.exports = { router, middlewareAdmin };
