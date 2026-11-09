@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Amigo Invisible 🎄</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="copos" id="copos"></div>
+  <div class="contenedor">
+    <header class="cabecera">
+      <span class="emoji-grande">🎄</span>
+      <h1>Amigo Invisible</h1>
+      <p class="subtitulo">Organiza tu sorteo navideño en minutos</p>
+    </header>
+
+    <div class="tarjeta">
+      <h2>🎁 Crear nuevo sorteo</h2>
+      <div id="alerta" class="alerta"></div>
+      <form id="formulario-crear">
+        <div class="campo">
+          <label for="nombre">Nombre del sorteo</label>
+          <input type="text" id="nombre" placeholder="Ej: Navidad Familia García 2026" required maxlength="100">
+        </div>
+        <div class="campo">
+          <label for="email">Tu email (organizador)</label>
+          <input type="email" id="email" placeholder="tu@email.com" required>
+        </div>
+        <div class="campo">
+          <label for="clave">Clave de administrador</label>
+          <input type="password" id="clave" placeholder="Clave secreta del sorteo" required>
+        </div>
+        <button type="submit" class="btn btn-primario" style="width:100%;margin-top:0.5rem">
+          🎄 Crear sorteo
+        </button>
+      </form>
+    </div>
+
+    <p class="texto-centro" style="font-size:0.85rem;color:var(--gris);margin-top:1rem">
+      ¿Ya tienes un sorteo? Busca el email con el enlace de administración.
+    </p>
+  </div>
+
+  <script>
+    // Copos de nieve
+    const coposEl = document.getElementById('copos');
+    const simbolos = ['❄','❅','❆','✻','✼'];
+    for (let i = 0; i < 20; i++) {
+      const c = document.createElement('span');
+      c.className = 'copo';
+      c.textContent = simbolos[Math.floor(Math.random() * simbolos.length)];
+      c.style.left = Math.random() * 100 + '%';
+      c.style.animationDuration = (4 + Math.random() * 8) + 's';
+      c.style.animationDelay = (-Math.random() * 10) + 's';
+      c.style.fontSize = (0.7 + Math.random() * 1.2) + 'rem';
+      coposEl.appendChild(c);
+    }
+
+    // Crear sorteo
+    document.getElementById('formulario-crear').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const alerta = document.getElementById('alerta');
+      alerta.className = 'alerta';
+      const btn = e.target.querySelector('button[type=submit]');
+      btn.disabled = true;
+      btn.textContent = 'Creando...';
+      try {
+        const res = await fetch('/api/sorteos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nombre: document.getElementById('nombre').value.trim(),
+            email_organizador: document.getElementById('email').value.trim(),
+            admin_secret: document.getElementById('clave').value
+          })
+        });
+        const datos = await res.json();
+        if (!res.ok) {
+          alerta.textContent = datos.error || 'Error al crear el sorteo.';
+          alerta.className = 'alerta alerta-error visible';
+          return;
+        }
+        alerta.textContent = '✅ Sorteo creado. Redirigiendo al panel...';
+        alerta.className = 'alerta alerta-exito visible';
+        setTimeout(() => {
+          window.location.href = '/admin.html?token=' + datos.token_admin;
+        }, 1200);
+      } catch (err) {
+        alerta.textContent = 'Error de red. Inténtalo de nuevo.';
+        alerta.className = 'alerta alerta-error visible';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🎄 Crear sorteo';
+      }
+    });
+  </script>
+</body>
+</html>

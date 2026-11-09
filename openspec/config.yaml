@@ -1,0 +1,39 @@
+schema: spec-driven
+
+# Se inyecta en TODAS las generaciones de artefactos. Conciso a propósito.
+context: |
+  Amigo Invisible: aplicación web para organizar sorteos de amigo invisible
+  entre grupos de personas (familia, amigos, compañeros de trabajo).
+
+  Stack técnico (fijado; no se renegocia en propuestas):
+  - Backend: Node.js con Express y better-sqlite3 (base de datos SQLite).
+  - Frontend: HTML/CSS/JS vanilla o React (a definir en el primer cambio).
+  - Tests: suite automatizada; cada escenario de las specs debe tener un
+    test trazable por el nombre del escenario.
+  - Sin Docker en desarrollo.
+
+  Principios innegociables:
+  1. Idioma: todo el producto (interfaz, textos, specs, commits,
+     documentación) en español de España.
+  2. Simplicidad ante todo: es una aplicación de uso puntual (una vez al año),
+     no una plataforma. Ante dos soluciones, siempre la más simple.
+  3. Privacidad por diseño: los participantes no se registran con datos
+     sensibles. Un sorteo se identifica por un código o enlace, no por
+     cuentas de usuario con contraseña.
+  4. La spec es la fuente de verdad: todo cambio de comportamiento
+     observable del sistema debe entrar como cambio de OpenSpec.
+  5. El resultado del sorteo se envía de forma que cada participante solo
+     conoce a quién le ha tocado regalar, nunca el resultado completo.
+
+# Reglas por artefacto: solo se inyectan al generar ese artefacto.
+rules:
+  specs:
+    - Redacta en español conservando la palabra normativa inglesa de cada
+      requisito (MUST/SHALL), p. ej. "El sistema MUST enviar la asignación
+      solo al participante correspondiente"
+    - Reutiliza los términos ya definidos en las specs vivas; no introduzcas
+      sinónimos nuevos para conceptos existentes
+  proposal:
+    - Registra cada decisión de negocio en proposal.md con su fecha
+  design:
+    - Ninguna dependencia nueva sin justificación escrita
