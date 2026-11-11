@@ -1,8 +1,5 @@
-[phases.setup]
-apt_pkgs = ["python3", "make", "g++"]
-
 [phases.build]
-cmds = ["npm ci", "npm run build"]
+cmds = ["npm ci"]
 
 [start]
 cmd = "npm start"

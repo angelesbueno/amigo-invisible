@@ -2,7 +2,7 @@
 
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
-const Database = require('better-sqlite3');
+const { Database } = require('node-sqlite3-wasm');
 const path = require('path');
 const fs = require('fs');
 
@@ -11,8 +11,8 @@ const DB_TEST_PATH = path.join(__dirname, '..', 'db_test_db.sqlite');
 // Reutilizamos la lógica de inicialización del esquema
 function crearDbTest() {
   const db = new Database(DB_TEST_PATH);
-  db.pragma('journal_mode = WAL');
-  db.pragma('foreign_keys = ON');
+  db.exec('PRAGMA journal_mode = WAL;');
+  db.exec('PRAGMA foreign_keys = ON;');
   db.exec(`
     CREATE TABLE IF NOT EXISTS sorteos (
       id                TEXT PRIMARY KEY,
