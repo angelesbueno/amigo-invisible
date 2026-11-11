@@ -1,6 +1,6 @@
 'use strict';
 
-const { DatabaseSync } = require('node:sqlite');
+const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
 
@@ -17,7 +17,7 @@ function obtenerDb() {
       || (process.env.NODE_ENV === 'production' ? '/data/db.sqlite' : path.join(__dirname, '..', 'db.sqlite'));
     const dir = path.dirname(dbPath);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    db = new DatabaseSync(dbPath);
+    db = new Database(dbPath);
     db.exec('PRAGMA journal_mode = WAL;');
     db.exec('PRAGMA foreign_keys = ON;');
     inicializarEsquema(db);
