@@ -2,7 +2,7 @@
 
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
-const { Database } = require('node-sqlite3-wasm');
+const { DatabaseSync: Database } = require('node:sqlite');
 const path = require('path');
 const fs = require('fs');
 

@@ -1,7 +1,8 @@
 'use strict';
 
-const { Database } = require('node-sqlite3-wasm');
+const { DatabaseSync } = require('node:sqlite');
 const path = require('path');
+const fs = require('fs');
 
 let db;
 
@@ -14,11 +15,9 @@ function obtenerDb() {
   if (!db) {
     const dbPath = process.env.TEST_DB_PATH
       || (process.env.NODE_ENV === 'production' ? '/data/db.sqlite' : path.join(__dirname, '..', 'db.sqlite'));
-    // Crear directorio si no existe (necesario en Railway con volumen)
-    const fs = require('fs');
     const dir = path.dirname(dbPath);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    db = new Database(dbPath);
+    db = new DatabaseSync(dbPath);
     db.exec('PRAGMA journal_mode = WAL;');
     db.exec('PRAGMA foreign_keys = ON;');
     inicializarEsquema(db);
