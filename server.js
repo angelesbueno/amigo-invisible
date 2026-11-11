@@ -24,8 +24,8 @@ app.use('/api', participanteRouter);
 
 // Solo escucha cuando se ejecuta directamente (no cuando se importa en tests)
 if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`Amigo Invisible escuchando en http://localhost:${PORT}`);
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Amigo Invisible escuchando en http://0.0.0.0:${PORT}`);
   });
 }
 
