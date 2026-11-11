@@ -1,8 +1,5 @@
-[phases.setup]
-nixPkgs = ["python3", "gnumake", "gcc", "binutils"]
-
 [phases.build]
-cmds = ["npm ci"]
+cmds = ["npm install"]
 
 [start]
 cmd = "npm start"
