@@ -94,7 +94,7 @@
 - [x] 8.1 Ejecutar la suite completa con `npm test` y verificar que todos los tests pasan sin errores
 - [x] 8.2 Crear `README.md` con instrucciones de instalación local, descripción de variables de entorno y pasos de despliegue en Railway (design.md D9); verificar que los comandos documentados funcionan ejecutándolos
 - [x] 8.3 Configurar script `"start": "node server.js"` en `package.json` y verificar que Railway despliega sin errores haciendo push a GitHub
-- [ ] 8.4 Realizar sorteo de prueba end-to-end en producción: crear sorteo, añadir 3+ participantes con emails reales, definir al menos una exclusión, lanzar y verificar que cada participante recibe el email con su enlace personal y que el enlace muestra el nombre correcto
+- [x] 8.4 Realizar sorteo de prueba end-to-end en producción: crear sorteo, añadir 3+ participantes con emails reales, definir al menos una exclusión, lanzar y verificar que cada participante recibe el email con su enlace personal y que el enlace muestra el nombre correcto
 
 ## Workflow follow-up
 
