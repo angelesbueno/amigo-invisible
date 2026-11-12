@@ -1,24 +1,32 @@
 'use strict';
 
-const { Resend } = require('resend');
+const nodemailer = require('nodemailer');
 
-let resend;
+let transporter;
 
-function obtenerResend() {
-  if (!resend) {
-    resend = new Resend(process.env.RESEND_API_KEY);
+function obtenerTransporter() {
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
+      host: 'smtp-relay.brevo.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.BREVO_SMTP_USER,
+        pass: process.env.BREVO_SMTP_KEY
+      }
+    });
   }
-  return resend;
+  return transporter;
 }
 
-const REMITENTE = 'Amigo Invisible <noreply@amigo-invisible.app>';
+const REMITENTE = `Amigo Invisible <${process.env.BREVO_SMTP_USER}>`;
 
 /**
  * Envía el email de acceso al panel de administración al organizador.
  */
 async function enviarEmailAdmin({ emailOrganizador, nombreSorteo, urlAdmin }) {
-  const cliente = obtenerResend();
-  await cliente.emails.send({
+  const transport = obtenerTransporter();
+  await transport.sendMail({
     from: REMITENTE,
     to: emailOrganizador,
     subject: `🎄 Tu panel de Amigo Invisible — ${nombreSorteo}`,
@@ -46,9 +54,9 @@ async function enviarEmailAdmin({ emailOrganizador, nombreSorteo, urlAdmin }) {
  * Envía el email de Amigo Invisible a un participante.
  */
 async function enviarEmailParticipante({ nombre, email, nombreSorteo, token, baseUrl }) {
-  const cliente = obtenerResend();
+  const transport = obtenerTransporter();
   const enlace = `${baseUrl}/resultado.html?token=${token}`;
-  await cliente.emails.send({
+  await transport.sendMail({
     from: REMITENTE,
     to: email,
     subject: `🎁 ¡Ya tienes tu Amigo Invisible! — ${nombreSorteo}`,
