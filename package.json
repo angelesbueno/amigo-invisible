@@ -18,6 +18,6 @@
     "node": ">=20.0.0"
   },
   "allowScripts": {
-    "better-sqlite3@9.6.0": true
+    "better-sqlite3": true
   }
 }
