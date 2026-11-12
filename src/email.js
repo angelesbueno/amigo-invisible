@@ -1,33 +1,51 @@
 'use strict';
 
-const nodemailer = require('nodemailer');
+const https = require('https');
 
-let transporter;
-
-function obtenerTransporter() {
-  if (!transporter) {
-    transporter = nodemailer.createTransport({
-      host: 'smtp-relay.brevo.com',
-      port: 587,
-      secure: false,
-      auth: {
-        user: process.env.BREVO_SMTP_USER,
-        pass: process.env.BREVO_SMTP_KEY
-      }
+/**
+ * Llama a la API REST de Brevo para enviar un email transaccional.
+ * Usa https nativo (puerto 443) para evitar bloqueos SMTP en Railway.
+ */
+function enviarConBrevo({ to, toName, subject, html }) {
+  return new Promise((resolve, reject) => {
+    const payload = JSON.stringify({
+      sender: { name: 'Amigo Invisible', email: process.env.BREVO_SENDER_EMAIL },
+      to: [{ email: to, name: toName || to }],
+      subject,
+      htmlContent: html
     });
-  }
-  return transporter;
+    const options = {
+      hostname: 'api.brevo.com',
+      path: '/v3/smtp/email',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'api-key': process.env.BREVO_API_KEY,
+        'Content-Length': Buffer.byteLength(payload)
+      }
+    };
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', chunk => { data += chunk; });
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          resolve(JSON.parse(data));
+        } else {
+          reject(new Error(`Brevo API error ${res.statusCode}: ${data}`));
+        }
+      });
+    });
+    req.on('error', reject);
+    req.write(payload);
+    req.end();
+  });
 }
-
-const REMITENTE = `Amigo Invisible <${process.env.BREVO_SMTP_USER}>`;
 
 /**
  * Envía el email de acceso al panel de administración al organizador.
  */
 async function enviarEmailAdmin({ emailOrganizador, nombreSorteo, urlAdmin }) {
-  const transport = obtenerTransporter();
-  await transport.sendMail({
-    from: REMITENTE,
+  await enviarConBrevo({
     to: emailOrganizador,
     subject: `🎄 Tu panel de Amigo Invisible — ${nombreSorteo}`,
     html: `
@@ -54,11 +72,10 @@ async function enviarEmailAdmin({ emailOrganizador, nombreSorteo, urlAdmin }) {
  * Envía el email de Amigo Invisible a un participante.
  */
 async function enviarEmailParticipante({ nombre, email, nombreSorteo, token, baseUrl }) {
-  const transport = obtenerTransporter();
   const enlace = `${baseUrl}/resultado.html?token=${token}`;
-  await transport.sendMail({
-    from: REMITENTE,
+  await enviarConBrevo({
     to: email,
+    toName: nombre,
     subject: `🎁 ¡Ya tienes tu Amigo Invisible! — ${nombreSorteo}`,
     html: `
       <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px">
