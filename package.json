@@ -8,14 +8,14 @@
     "test": "node --test test/**/*.test.js"
   },
   "dependencies": {
-    "better-sqlite3": "^13.1.1",
+    "better-sqlite3": "9.6.0",
     "dotenv": "^16.6.1",
     "express": "^4.18.3",
     "nodemailer": "^10.5.0",
     "uuid": "^9.0.1"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": "20.x"
   },
   "allowScripts": {
     "better-sqlite3": true
